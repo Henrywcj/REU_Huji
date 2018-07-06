@@ -2,8 +2,14 @@ gpu=0
 
 # Extract optical flow
 mkdir data_pre
-search_dir="./S2"
-for entry in "$search_dir"/*
+search_dir="./Huji"
+for entry in "$search_dir"/*.MP4
+do
+  echo "$entry"
+  python3 opti.py $entry 30 "./data_pre/"
+done
+
+for entry in "$search_dir"/*.mp4
 do
   echo "$entry"
   python3 opti.py $entry 30 "./data_pre/"
