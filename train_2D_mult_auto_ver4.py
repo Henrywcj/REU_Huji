@@ -140,7 +140,6 @@ mean=[]
 std=[]
 print('starting '+name+' '+typ)
 
-exit()
 
 for k in range(no_auto):
 	if os.path.exists(path2sav+name+'/models_'+suffix+'/pretrained_conv_auto_'+typ+'_'+str(k).zfill(2)+'.h5'):
