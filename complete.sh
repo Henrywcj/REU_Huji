@@ -15,18 +15,10 @@ do
   python3 opti.py $entry 15 "./data_pre/"
 done
 
-# Extract raw_frames
-
-for entry in "$search_dir"/*
-do
-  echo "$entry"
-  python3 raw_frame.py $entry 30 "./data_pre/"
-done
 
 # Train spatial autoencoders for flow_x, flow_y and frame respectivly
-python3 train_2D_mult_auto_ver4.py "S2" $gpu "./data_pre/" "./folder5/" "x"
-python3 train_2D_mult_auto_ver4.py "S2" $gpu "./data_pre/" "./folder5/" "y"
-python3 train_2D_mult_auto_ver4.py "S2_frame" $gpu "./data_pre/" "./folder5/"
+python3 train_2D_mult_auto_ver4.py "Huji_optical_flow_30_frame" $gpu "./data_pre/" "./folder5/" "x"
+python3 train_2D_mult_auto_ver4.py "Huji_optical_flow_30_frame" $gpu "./data_pre/" "./folder5/" "y"
 
 # Extract features from flow_x stream
 ser_dir="./data_pre/S2"
