@@ -6,13 +6,13 @@ search_dir="./Huji"
 for entry in "$search_dir"/*.MP4
 do
   echo "$entry"
-  python3 opti.py $entry 30 "./data_pre/"
+  python3 opti.py $entry 15 "./data_pre/"
 done
 
 for entry in "$search_dir"/*.mp4
 do
   echo "$entry"
-  python3 opti.py $entry 30 "./data_pre/"
+  python3 opti.py $entry 15 "./data_pre/"
 done
 
 # Extract raw_frames
