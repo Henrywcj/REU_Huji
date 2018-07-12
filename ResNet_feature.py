@@ -131,6 +131,7 @@ open(path2sav+'model_temp.json','w').write(json_string)
 folder=sorted(glob.glob(path+name+'/*'))
 total_file=[]
 file_class=[]
+ind = []
 path_gt = './Huji/'
 
 print('start loading data')
@@ -139,6 +140,7 @@ if os.path.exists(path+name+'/feat_'+typ+'.npy'):
 	print('skipping extracting feature '+typ)
 	total_file=np.load(path+name+'/feat_'+typ+'.npy')
 	file_class=np.load(path+name+'/class_labels.npy')
+	ind = np.load(path+name+'/ind.npy')
 else:
 	exit()
 	for i in folder:
@@ -156,6 +158,7 @@ else:
 		n_frames = file.shape[0]
 		path_gt_v = path_gt+name_folder+'.mat'
 		gt = scipy.io.loadmat(path_gt_v)['gt'][:n_frames]
+		ind.append(gt.shape[0])
 		gt = keras.utils.to_categorical(np.squeeze(gt),7)
 	    
 	    # Put everything in one file
@@ -167,13 +170,16 @@ else:
 			file_class = np.concatenate((file_class,gt))
 	np.save(path+name+'/feat_'+typ, total_file)
 	np.save(path+name+'/class_labels', file_class)
+	np.save(path+name+'/ind', np.array(ind))
 
-# train/test split TODO do I need to sample it? 
-# TODO: validation dataset?
-train=[:80000,:,:]
-train_labels = [:80000, :]
-test=[80000:,:,:]
-test_labels=[80000,:]
+# train/test split 
+split = np.sum(ind[int(np.round(len(ind)*0.7))])
+#TODO: check every class has samples in training set
+
+train=[:split,:,:]
+train_labels = [:split, :]
+test=[split:,:,:]
+test_labels=[split,:]
 
 
 # Training
