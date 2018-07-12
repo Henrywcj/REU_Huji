@@ -12,6 +12,7 @@ from keras import backend as K
 import glob as glob
 import numpy as np
 import random
+import keras
 
 #from scipy.stats import threshold
 
@@ -45,13 +46,13 @@ if not(os.path.isdir(path2sav+name+'/mean_std_'+suffix)):
 inp_sz=(36,64)
 drop=0
 n_class=3 #TODO: for Huji right now
-epoch=200
+epoch=15
 opti='adam'
 los=keras.losses.categorical_crossentropy
-no_layer=[16,32,64,128]
+no_layer=[8,16,32,64]
 no_auto=20
 no_sp_per_vid=20
-batch_sz=2000
+batch_sz=1000
 
 ####Set type here, x for flow_x, y for flow_y and <blank> for frame
 if(len(sys.argv)==6):
@@ -135,7 +136,8 @@ ind = []
 path_gt = './Huji/'
 
 print('start loading data')
-print(path+name+'/feat_'+typ+'.npy')
+#print(path+name+'/feat_'+typ+'.npy')
+
 if os.path.exists(path+name+'/feat_'+typ+'.npy'):
 	print('skipping extracting feature '+typ)
 	total_file=np.load(path+name+'/feat_'+typ+'.npy')
@@ -143,7 +145,7 @@ if os.path.exists(path+name+'/feat_'+typ+'.npy'):
 	ind = np.load(path+name+'/ind.npy')
 else:
 	exit()
-	for i in folder:
+	for i in folder[:-1]:
 		print(i)
 		print(typ)
 		name_folder = i[49:-3]   
@@ -176,27 +178,52 @@ else:
 	np.save(path+name+'/ind', np.array(ind))
 
 # train/test split 
-split = np.sum(ind[int(np.round(len(ind)*0.7))])
+split = np.sum(ind[:int(np.round(len(ind)*0.7))])
 #TODO: check every class has samples in training set
+total_file = np.reshape(total_file, (total_file.shape[0], 1, total_file.shape[1], total_file.shape[2]))
+train=total_file[:split,:,:,:]
+train_labels = file_class[:split, :]
+test=total_file[split:,:,:,:]
+test_labels=file_class[split:,:]
+#print(test_labels.shape)
+#print(test.shape)
+#print(file_class.shape)
+#print(total_file.shape)
+#exit()
+#for i in range(3):
+#	if np.sum(train_labels[:,i]) == 0:
+#		print("training: No Class "+str(i))
+#		print(np.sum(train_labels[:,i]))
+#	else:
+#		print("training: Have class "+str(i))
+#		print(np.sum(train_labels[:,i]))
+#	print("original")
+#	print(np.sum(file_class[:,i]))
+#for i in range(3):
+#	if np.sum(test_labels[:,i]) == 0:
+#		print("testing: No Class "+str(i))
+#		print(np.sum(test_labels[:,i]))
+#	else:
+#		print("testing: Have class "+str(i))
+#		print(np.sum(test_labels[:,i]))
 
-train=[:split,:,:]
-train_labels = [:split, :]
-test=[split:,:,:]
-test_labels=[split,:]
-
+#exit()
 
 # Training
 model = model_from_json(open(path2sav+'model_temp.json').read())
 model.compile(optimizer=opti,loss=los,metrics=['accuracy'])
 
-model.fit(train, train_labels, batch_size=batch_sz, verbose=1, epochs=epoch, validation_split=0.1)
+model.fit(train, train_labels, batch_size=batch_sz, verbose=1, epochs=epoch, validation_data=(test, test_labels))
 score = model.evaluate(test, test_labels, verbose=0)
 model.save_weights(path2sav+name+'/models_'+suffix+'/model_'+typ+'.h5')
 
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
-
+feat_extract_model = Model(inputs=model.input, outputs=model.layers[-2].output)
+original_feat = total_file
+extra_feat = feat_extract_model.predict(original_feat)
+np.save(path+name+'/extra_feat_'+typ, extra_feat)
 
 
 
