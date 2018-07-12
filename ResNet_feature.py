@@ -44,7 +44,7 @@ if not(os.path.isdir(path2sav+name+'/mean_std_'+suffix)):
 ########## Set parameters here
 inp_sz=(36,64)
 drop=0
-n_class=7 #TODO: for Huji
+n_class=3 #TODO: for Huji right now
 epoch=200
 opti='adam'
 los=keras.losses.categorical_crossentropy
@@ -158,8 +158,11 @@ else:
 		n_frames = file.shape[0]
 		path_gt_v = path_gt+name_folder+'.mat'
 		gt = scipy.io.loadmat(path_gt_v)['gt'][:n_frames]
+		# normalize gt, with class labels 0, 1, 2, 3...
+		# in Huji ground truth, we only have class labels 1,2,3
+		gt = gt - 1
 		ind.append(gt.shape[0])
-		gt = keras.utils.to_categorical(np.squeeze(gt),7)
+		gt = keras.utils.to_categorical(np.squeeze(gt),n_class)
 	    
 	    # Put everything in one file
 		if (total_file==[]):
