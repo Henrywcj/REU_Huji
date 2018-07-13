@@ -185,6 +185,16 @@ train=total_file[:split,:,:,:]
 train_labels = file_class[:split, :]
 test=total_file[split:,:,:,:]
 test_labels=file_class[split:,:]
+# Loss weighted according to the class distribution in training set
+class_num = []
+for i in range(n_class):
+	class_num.append(np.sum(train_labels[:,i]))
+class_num = class_num/sum(class_num)
+class_num = 1/class_num
+class_num = class_num/sum(class_num)
+weights = {i:class_num[i] for i in range(n_class)}
+
+
 #print(test_labels.shape)
 #print(test.shape)
 #print(file_class.shape)
@@ -213,7 +223,8 @@ test_labels=file_class[split:,:]
 model = model_from_json(open(path2sav+'model_temp.json').read())
 model.compile(optimizer=opti,loss=los,metrics=['accuracy'])
 
-model.fit(train, train_labels, batch_size=batch_sz, verbose=1, epochs=epoch, validation_data=(test, test_labels))
+#TODO:create a dictionary for weights to do weighted categorical cross entropy
+model.fit(train, train_labels, class_weight = weights, batch_size=batch_sz, verbose=1, epochs=epoch, validation_data=(test, test_labels))
 score = model.evaluate(test, test_labels, verbose=0)
 model.save_weights(path2sav+name+'/models_'+suffix+'/model_'+typ+'.h5')
 
