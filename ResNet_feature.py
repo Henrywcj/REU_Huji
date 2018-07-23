@@ -46,7 +46,7 @@ if not(os.path.isdir(path2sav+name+'/mean_std_'+suffix)):
 inp_sz=(36,64)
 drop=0
 n_class=3 #TODO: for Huji right now
-epoch=15
+epoch=40
 opti='adam'
 los=keras.losses.categorical_crossentropy
 no_layer=[8,16,32,64]
@@ -61,6 +61,20 @@ else:
 	typ=''
 
 #Architecture
+
+def recall_accuracy(y_true, y_pred):
+	"""
+	Recall metric.
+
+	Only computes a batch-wise average of recall.
+
+	Computes the recall, a metric for multi-label classification of how many relevant 
+	items are selected
+	"""
+	true_positives = K.sum(K.round(K.clip(y_true*y_pred, 0, 1)))
+	possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+	recall = true_positives / (possible_positives + K.epsilon())
+	return recall
 
 def add_common_layers(y):
 	y = BatchNormalization(axis = 1)(y)
@@ -221,9 +235,8 @@ weights = {i:class_num[i] for i in range(n_class)}
 
 # Training
 model = model_from_json(open(path2sav+'model_temp.json').read())
-model.compile(optimizer=opti,loss=los,metrics=['accuracy'])
+model.compile(optimizer=opti,loss=los,metrics=['accuracy', recall_accuracy])# TODO:IMPLEMENT RECALL
 
-#TODO:create a dictionary for weights to do weighted categorical cross entropy
 model.fit(train, train_labels, class_weight = weights, batch_size=batch_sz, verbose=1, epochs=epoch, validation_data=(test, test_labels))
 score = model.evaluate(test, test_labels, verbose=0)
 model.save_weights(path2sav+name+'/models_'+suffix+'/model_'+typ+'.h5')
