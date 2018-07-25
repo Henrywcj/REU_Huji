@@ -6,6 +6,7 @@ from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, AveragePooli
 from keras.models import Model
 import numpy as np
 from keras.models import model_from_json
+from keras import optimizers 
 from keras import backend as K
 #import matplotlib.pyplot as plt
 #import matplotlib.image as mpimg
@@ -44,10 +45,10 @@ if not(os.path.isdir(path2sav+name+'/mean_std_'+suffix)):
 
 ########## Set parameters here
 inp_sz=(36,64)
-drop=0
-n_class=3 #TODO: for Huji right now
-epoch=40
-opti='adam'
+drop=0.2
+n_class=5 #TODO: for Huji right now
+epoch=100
+opti= optimizers.Adam(decay = 0.001)
 los=keras.losses.categorical_crossentropy
 no_layer=[8,16,32,64]
 no_auto=20
@@ -104,18 +105,26 @@ def residual_block(y, nb_channels, _strides=(1,1), _project_shortcut=False):
 
 # Define layer 1
 input_img1 = Input(shape=(1, inp_sz[0], inp_sz[1]))
+#x1 = Conv2D(no_layer[0], (3, 3), padding="same", data_format="channels_first")(input_img1)
+#x1 = add_common_layers(x1)
+#x1 = Dropout(drop)(x1)
+#x1 = MaxPooling2D((2,2), padding='valid', data_format = 'channels_first')(x1)
 x1 = Conv2D(no_layer[0], (3, 3), padding="same", data_format="channels_first")(input_img1)
 x1 = add_common_layers(x1)
+x1 = Dropout(drop)(x1)
 x1 = MaxPooling2D((2,2), padding='valid', data_format = 'channels_first')(x1)
-for i in range(3):
-	project_shortcut = True if i == 0 else False
-	x1 = residual_block(x1, no_layer[1], _project_shortcut=project_shortcut)
 
-for i in range(4):
-	# down-sampling is performed by conv3_1, conv4_1, and conv5_1 with a stride of 2
-	strides = (2, 2) if i == 0 else (1, 1)
-	x1 = residual_block(x1, no_layer[2], _strides=strides)
-
+#for i in range(3):
+#	project_shortcut = True if i == 0 else False
+#	x1 = residual_block(x1, no_layer[1], _project_shortcut=project_shortcut)
+#	x1 = Dropout(drop)(x1)
+#
+#for i in range(4):
+#	# down-sampling is performed by conv3_1, conv4_1, and conv5_1 with a stride of 2
+#	strides = (2, 2) if i == 0 else (1, 1)
+#	x1 = residual_block(x1, no_layer[2], _strides=strides)
+#	x1 = Dropout(drop)(x1)
+#
 # for i in range(6):
 # 	strides = (2, 2) if i == 0 else (1, 1)
 # 	x1 = residual_block(x1, no_layer[3], _project_shortcut=project_shortcut)
@@ -126,8 +135,8 @@ for i in range(4):
 # print(x1.shape)
 # exit()
 x1 = Flatten(data_format='channels_first')(x1)
-x1 = Dense(500, activation='relu')(x1)
 x1 = Dense(100, activation='relu')(x1)
+x1 = Dense(25, activation='relu')(x1)
 # Loss function for classification 
 result_class = Dense(n_class, activation='softmax')(x1)
 
@@ -193,7 +202,6 @@ else:
 
 # train/test split 
 split = np.sum(ind[:int(np.round(len(ind)*0.7))])
-#TODO: check every class has samples in training set
 total_file = np.reshape(total_file, (total_file.shape[0], 1, total_file.shape[1], total_file.shape[2]))
 train=total_file[:split,:,:,:]
 train_labels = file_class[:split, :]
@@ -213,8 +221,8 @@ weights = {i:class_num[i] for i in range(n_class)}
 #print(test.shape)
 #print(file_class.shape)
 #print(total_file.shape)
-#exit()
-#for i in range(3):
+##exit()
+#for i in range(5):
 #	if np.sum(train_labels[:,i]) == 0:
 #		print("training: No Class "+str(i))
 #		print(np.sum(train_labels[:,i]))
@@ -223,14 +231,14 @@ weights = {i:class_num[i] for i in range(n_class)}
 #		print(np.sum(train_labels[:,i]))
 #	print("original")
 #	print(np.sum(file_class[:,i]))
-#for i in range(3):
+#for i in range(5):
 #	if np.sum(test_labels[:,i]) == 0:
 #		print("testing: No Class "+str(i))
 #		print(np.sum(test_labels[:,i]))
 #	else:
 #		print("testing: Have class "+str(i))
 #		print(np.sum(test_labels[:,i]))
-
+#
 #exit()
 
 # Training
